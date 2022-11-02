@@ -13,6 +13,9 @@ library(tidyverse)
 library(caret)
 ```
 
+## Introduction
+Wasatch Grocery Chain (WGC) is a regional grocery chain operating in the Intermoutain West of the US. WGC sells two brands of orange juice in its stores, Citrus Hill (CH) and Minute Maid (MM) of which MM is the more profitable to the company.  This report will identify what customer factors within available data contribute to purchase of MM over CH, as well as to what degree these factors influence customer choice.  In addition, a predictive model is created that will allow the Sales Department to identify other customers within our customer base that are more likely to purchase Minute Maid brand orange juice, thus driving profitability across the company.
+
 ```{r setup}
 set.seed(1234)
 df <- read.csv(url("http://data.mishra.us/files/project/OJ_data.csv"))
@@ -24,13 +27,10 @@ test <- df[-datasplit, ]
 
 ```
 
-## Introduction
-Wasatch Grocery Chain (WGC) is a regional grocery chain operating in the Intermoutain West of the US. WGC sells two brands of orange juice in its stores, Citrus Hill (CH) and Minute Maid (MM) of which MM is the more profitable to the company.  This report will identify what customer factors within available data contribute to purchase of MM over CH, as well as to what degree these factors influence customer choice.  In addition, a predictive model is created that will allow the Sales Department to identify other customers within our customer base that are more likely to purchase Minute Maid brand orange juice, thus driving profitability across the company.
-
 ### Available Data 
 The data set used in this report contains 13 possible predictor variables as well as 1 outcome variable, Purchase, which records whether or not a customer purchased MM.  There are a total of 1070 observations in the data set.  The data set was further partitioned into a **training** data set, containing `r nrow(train)` observations, and a validation **testing** data set containing `r nrow(test)` observations.
 
-```{r Appendix 1}
+```{r Appendix 1: Data Characteristics}
 summary(df)
 summary(test)
 summary(train) #need to equalize the 0/1 split in train data set
@@ -40,6 +40,8 @@ summary(train) #need to equalize the 0/1 split in train data set
 
 
 ## Methods
+
+<!-- To be filled out once analysis has been completed -->
 
 ## Results
 
