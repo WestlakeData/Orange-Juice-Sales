@@ -1,4 +1,4 @@
-# MKTG-6620
+# Orange Juice Sales Analysis and Predictive Model
 R-markdown Report answering questions posed by Brand Manager and Sales Manager of a grocery store regarding improvements to Orange Juice sales.
 
 Questions to be answered:
