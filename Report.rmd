@@ -23,19 +23,24 @@ test <- df[-datasplit, ]
 ```
 
 ## Introduction
-Wasatch Grocery Chain (WGC) is a regional grocery chain operating in the Intermoutain West or the US. WGC sells two brands of orange juice in its stores, Citrus Hill (CH) and Minute Maid (MM) of which MM is the more profitable to WGC.  In this report, we will identify what customer factors within available data contribute to purchase of MM over CH, as well as to what degree these factors influence customer choice.  In addition, we will provide a predictive model that will allow the Sales Department to identify other customers within our customer base that are more likely to purchase Minute Maid brand orange juice, thus driving profitability across the company.
+Wasatch Grocery Chain (WGC) is a regional grocery chain operating in the Intermoutain West or the US. WGC sells two brands of orange juice in its stores, Citrus Hill (CH) and Minute Maid (MM) of which MM is the more profitable to the company.  This report will identify what customer factors within available data contribute to purchase of MM over CH, as well as to what degree these factors influence customer choice.  In addition, we will provide a predictive model that will allow the Sales Department to identify other customers within our customer base that are more likely to purchase Minute Maid brand orange juice, thus driving profitability across the company.
 
 ## Methods
 
+## Results
 
-```{r cars}
-
-```
-
-
-
-```{r pressure}
+```{r brand analysis, warning=FALSE}
 
 ```
 
 
+
+```{r sales analysis, warning=FALSE}
+
+```
+
+## Conclusions and Recommendations
+
+### Brand
+
+### Sales
