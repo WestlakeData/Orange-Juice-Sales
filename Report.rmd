@@ -1,6 +1,6 @@
 ---
-title: "Orange Juice Sales at Wasatch Grocery Chain"
-subtitle: "Determining Factors and Predictive Modelling of Minute Maid Sales"
+title: \vspace{6cm}\LARGE Orange Juice Sales at Wasatch Grocery Chain
+subtitle: "Identification of Significant Predictor Variables and Predictive Modelling of Customer Preferance in Minute Maid Sales"
 author: "Chris Gearheart and Chris Porter"
 date: "`r Sys.Date()`"
 output: pdf_document
@@ -28,7 +28,7 @@ test <- df[-datasplit, ]
 ```
 
 ### Available Data 
-The data set used in this report contains 13 possible predictor variables as well as 1 outcome variable, Purchase, which records whether or not a customer purchased MM.  There are a total of 1070 observations in the data set.  The data set was further partitioned into a **training** data set, containing `r nrow(train)` observations, and a validation **testing** data set containing `r nrow(test)` observations.
+The data set used in this report contains 13 possible predictor variables as well as 1 outcome variable, Purchase, which records whether or not a customer purchased MM.  There are a total of 1070 observations in the data set.  The data set was further partitioned into a **training data set**, containing `r nrow(train)` observations, and a validation **testing data set** containing `r nrow(test)` observations.
 
 ```{r Appendix 1: Data Characteristics}
 summary(df)
