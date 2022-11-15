@@ -35,6 +35,8 @@ summary(df)
 summary(test)
 summary(train) #need to equalize the 0/1 split in train data set
 
+# TEST TEST TEST Chris gearheart's test 
+
 
 ```
 
