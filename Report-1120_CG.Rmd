@@ -1,0 +1,206 @@
+  ---
+title: \vspace{6cm}\LARGE Orange Juice Sales at Wasatch Grocery Chain
+subtitle: "Identification of Significant Predictor Variables and Predictive Modelling of Customer Preferance in Minute Maid Sales"
+author: "Chris Gearheart and Chris Porter"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+\newpage
+
+```{r library calls, include=FALSE, warning=FALSE}
+library(tidyverse)
+library(tidymodels)
+library(caret)
+library(corrplot)
+library(xgboost)
+library(vip)
+library(DALEXtra)
+```
+
+## Introduction
+Wasatch Grocery Chain (WGC) is a regional grocery chain operating in the Intermoutain West of the US. WGC sells two brands of orange juice in its stores, Citrus Hill (CH) and Minute Maid (MM) of which MM is the more profitable to the company.  This report will identify what customer factors within available data contribute to purchase of MM over CH, as well as to what degree these factors influence customer choice.  In addition, a predictive model is created that will allow the Sales Department to identify other customers within our customer base that are more likely to purchase Minute Maid brand orange juice, thus driving profitability across the company.
+
+```{r setup}
+set.seed(1234)
+df <- read.csv(url("http://data.mishra.us/files/project/OJ_data.csv"))
+df[-1] <- lapply(df[-1],as.numeric)
+df$Purchase <- as.factor(df$Purchase)
+purchase_testtrain <- initial_split(df, prop = 0.75, strata = Purchase)
+train <- training(purchase_testtrain)
+test <- testing(purchase_testtrain)
+
+
+```
+
+### Available Data 
+The data set used in this report contains 13 possible predictor variables as well as 1 outcome variable, Purchase, which records whether or not a customer purchased MM.  There are a total of 1070 observations in the data set.  The data set was further partitioned into a **training** data set, containing `r nrow(train)` observations, and a validation **testing** data set containing `r nrow(test)` observations.
+
+## Methods
+
+<!-- To be filled out once analysis has been completed -->
+
+## Results
+
+1.	What predictor variables influence the purchase of MM?
+2.	Are all the variables in the dataset effective or are some more effective than others?
+3.	How confident are you in your recommendations?
+4.	Based on your analysis what are the specific recommendations you have for the brand manager?
+
+```{r logistic regression - Pre-processing, warning=FALSE}
+
+set.seed(1234)
+
+# Pre-processing
+# Dummy variables are unnecessary because only `Purchase` is a factor, and it's already expressed using dummy variables
+
+# No columns are uniformly filled with one unique value — there is spread in each of the 13 independent variables.
+summary(train)
+
+# There is no missing data — imputation is not necessary
+sum(is.na(train))
+
+# Check for correlation using principal component analysis — some variables may not be truly independent, which increases the risk of a model being overfit.
+
+# Compute PCA of `train` after standardizing the `train`
+trainstan <- train[-1] %>% scale()
+trainpca <- prcomp(trainstan, scale = TRUE)
+
+
+# Ideal number of components suggested by three methods
+
+# The explained variance method shows us that four variables account for a minimum 75% of variance explained power in the method. See `Cumulative proportion` at PC4.
+summary(trainpca)
+
+# The Kaiser-Guttman method, which argues that only components whose Eigenvalue is greater than one should be included, also suggests only four variables
+trainpca$sdev ^ 2
+
+# A screeplot of those Eigenvalues confirms -- 
+screeplot(trainpca, type = "lines")
+
+```
+
+Of the 13 variables we have, we have isolated four "components" as the most relevant predictors of purchase.
+
+Note about PCA: https://stats.stackexchange.com/questions/172806/how-to-keep-original-column-names-of-a-data-frame-when-doing-pca-in-r
+
+```{r logistic regression - Logistic regression with principal components, warning=FALSE}
+
+# Logistic regression without 
+mod1<- glm(Purchase ~ ., data = train,family=binomial(link='logit'))
+
+summary(mod1)
+
+dataPComps <- cbind(train[,"Purchase"],trainpca$x[,1:4]) %>% 
+  as.data.frame
+
+glimpse(dataPComps)
+
+mod2 <- glm(V1 ~ ., data=dataPComps, family=binomial(link='logit'))
+
+
+```
+
+
+```{r boosted trees model tuning, warning=FALSE, echo=TRUE}
+set.seed(1234)
+recipe_oj <- recipe(Purchase ~ ., train)
+
+model_oj_bt <- boost_tree(trees = tune(), tree_depth = tune(), learn_rate = tune()) %>%
+  set_engine('xgboost', verbosity = 0) %>%
+  set_mode('classification')
+
+hyperparameter_grid <- grid_regular(trees(), tree_depth(), learn_rate(), levels = 5)
+
+purchase_folds <- vfold_cv(train, v=4) # 4-fold Cross validation
+
+oj_workflow <- workflow() %>% add_model(model_oj_bt) %>% add_recipe(recipe_oj) #Set Workflow
+
+# Tune Hyper-parameters
+oj_tune <- oj_workflow %>% tune_grid(resamples = purchase_folds,
+                                     grid = hyperparameter_grid,
+                                     metrics = metric_set(accuracy))
+
+best_bt_model <- oj_tune %>% select_best('accuracy') #Select best Hyper-parameters from grid
+
+best_bt_model
+
+```
+
+```{r boosted trees final model, warning=FALSE, echo=TRUE}
+
+oj_final_workflow <- oj_workflow %>% finalize_workflow(best_bt_model) # Create Final Workflow based upon selected hyperparameters
+
+final_fit <- oj_final_workflow %>% last_fit(split = purchase_testtrain) # Final Fit Model
+
+final_fit %>% collect_metrics()
+
+oj_final_workflow %>% fit(data = train) %>% extract_fit_parsnip() %>% vip(geom = 'col') #Plot most important variables based upon Variable Importance metric
+
+vi_values <- oj_final_workflow %>% fit(data = train) %>% extract_fit_parsnip() %>% vi()
+
+vi_values
+vi_gt_1 <- vi_values %>% filter(Importance >= 0.01)
+vi_gt_1
+
+```
+
+the most important variable is `r vi_values$Variable[1]` with a `r round(vi_values$Importance[1] *100, 4)`%
+
+```{r XAI, warning=FALSE, echo=TRUE}
+
+model_fitted <- oj_final_workflow %>% fit(data = train)
+
+explainer_rf <- explain_tidymodels(model_fitted, 
+                                   data = train[,-1], 
+                                   y = train$Purchase, 
+                                   type = "pdp",verbose = FALSE)
+
+pdp_LoyalCH <- model_profile(explainer_rf, 
+                             variables = "LoyalCH", 
+                             N=NULL)
+pdp_PriceDiff <- model_profile(explainer_rf, 
+                                variables = "PriceDiff", 
+                                N=NULL)
+pdp_DiscCH <- model_profile(explainer_rf, 
+                             variables = "DiscCH", 
+                             N=NULL)
+pdp_ListPriceDiff <- model_profile(explainer_rf, 
+                             variables = "ListPriceDiff", 
+                             N=NULL)
+pdp_SalePriceMM <- model_profile(explainer_rf, 
+                             variables = "SalePriceMM", 
+                             N=NULL)
+pdp_DiscMM <- model_profile(explainer_rf, 
+                             variables = "DiscMM", 
+                             N=NULL)
+
+plot(pdp_LoyalCH)
+plot(pdp_PriceDiff)
+#plot(pdp_DiscCH)
+#plot(pdp_ListPriceDiff)
+#plot(pdp_SalePriceMM)
+#plot(pdp_DiscMM)
+
+```
+
+## Conclusions and Recommendations
+
+### Brand
+
+### Sales
+
+## Appendix 1: Data Characteristics
+```{r Appendix 1 Data Characteristics, echo=TRUE, warning=FALSE}
+summary(df)
+summary(test)
+summary(train) #need to equalize the 0/1 split in train data set
+
+corr <- cor(df[-1]) #correlogram of numeric variables, excluding outcome variable
+testDf <- cor.mtest(df[-1], conf.level = 0.95) #compute significance of correlation
+# Plot correlogram
+corrplot(corr, p.mat = testDf$p, method = 'number', type = 'lower', insig='blank', 
+         addCoef.col ='black', number.cex = 0.6, order = 'AOE', diag=FALSE, tl.srt = 45, tl.col = 'black')
+
+
+```
