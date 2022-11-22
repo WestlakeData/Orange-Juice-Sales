@@ -1,4 +1,4 @@
----
+  ---
 title: \vspace{6cm}\LARGE Orange Juice Sales at Wasatch Grocery Chain
 subtitle: "Identification of Significant Predictor Variables and Predictive Modelling of Customer Preferance in Minute Maid Sales"
 author: "Chris Gearheart and Chris Porter"
@@ -16,6 +16,7 @@ library(corrplot)
 library(xgboost)
 library(vip)
 library(DALEXtra)
+library(car)
 ```
 
 ## Introduction
@@ -42,10 +43,79 @@ The data set used in this report contains 13 possible predictor variables as wel
 
 ## Results
 
-```{r brand analysis, warning=FALSE}
+1.	What predictor variables influence the purchase of MM?
+2.	Are all the variables in the dataset effective or are some more effective than others?
+3.	How confident are you in your recommendations?
+4.	Based on your analysis what are the specific recommendations you have for the brand manager?
+
+```{r logistic regression - Pre-processing, warning=FALSE}
+
+set.seed(1234)
+
+# Pre-processing
+# Dummy variables are unnecessary because only `Purchase` is a factor, and it's already expressed using dummy variables
+
+# No columns are uniformly filled with one unique value — there is spread in each of the 13 independent variables.
+summary(train)
+
+# There is no missing data — imputation is not necessary
+sum(is.na(train))
+
+# Check for multicollinearity using VIF. Running `vif()` returns an aliased coefficients error -- a sign that mutlicollinearity is present. Two or more predictor variables are perfectly correlated. 
+modm <- glm (Purchase ~., family="binomial", data=train)
+# vif(modm)
+
+# A correlogram of our data set confirms that at least four variables are highly correlated — DiscMM + PctDiscMM and DiscCH and PctDiscCH
+
+corr <- cor(df[-1]) #correlogram of numeric variables, excluding outcome variable
+testDf <- cor.mtest(df[-1], conf.level = 0.95) #compute significance of correlation
+# Plot correlogram
+corrplot(corr, p.mat = testDf$p, method = 'number', type = 'lower', insig='blank', 
+         addCoef.col ='black', number.cex = 0.6, order = 'AOE', diag=FALSE, tl.srt = 45, tl.col = 'black')
+
+
+# Use principal component analysis to reduce dimensionality in light of multicollinearity 
+
+# Compute PCA of `train` after standardizing the `train`
+trainstan <- train[-1] %>% scale()
+trainpca <- prcomp(trainstan, scale = TRUE)
+
+
+# Ideal number of components suggested by three methods
+
+# The explained variance method shows us that four variables account for a minimum 75% of variance explained power in the method. See `Cumulative proportion` at PC4.
+summary(trainpca)
+
+# The Kaiser-Guttman method, which argues that only components whose Eigenvalue is greater than one should be included, also suggests only four variables
+trainpca$sdev ^ 2
+
+# A screeplot of those Eigenvalues confirms -- 
+screeplot(trainpca, type = "lines")
 
 ```
 
+Of the 13 variables we have, we have isolated four "components" or key relationships between those 13 variables, as the most relevant predictors of purchase.
+
+
+```{r logistic regression - Logistic regression with principal components, warning=FALSE}
+
+# Logistic regression without components
+mod1<- glm(Purchase ~ ., data = train,family=binomial(link='logit'))
+summary(mod1)
+
+# RMSE, confusion matrix, ROC AUC
+mod1$coefficients
+
+# Logistic regression using four components
+dataPComps <- cbind(train[,"Purchase"],trainpca$x[,1:4]) %>% 
+  as.data.frame
+
+glimpse(dataPComps)
+
+# mod2 <- glm(V1 ~ ., data=dataPComps, family=binomial(link='logit'))
+      
+
+```
 
 
 ```{r boosted trees model tuning, warning=FALSE, echo=TRUE}
@@ -84,6 +154,8 @@ final_fit %>% collect_metrics()
 oj_final_workflow %>% fit(data = train) %>% extract_fit_parsnip() %>% vip(geom = 'col') #Plot most important variables based upon Variable Importance metric
 
 vi_values <- oj_final_workflow %>% fit(data = train) %>% extract_fit_parsnip() %>% vi()
+
+vi_values
 vi_gt_1 <- vi_values %>% filter(Importance >= 0.01)
 vi_gt_1
 
@@ -145,12 +217,6 @@ testDf <- cor.mtest(df[-1], conf.level = 0.95) #compute significance of correlat
 # Plot correlogram
 corrplot(corr, p.mat = testDf$p, method = 'number', type = 'lower', insig='blank', 
          addCoef.col ='black', number.cex = 0.6, order = 'AOE', diag=FALSE, tl.srt = 45, tl.col = 'black')
-
-
-
-
-
-# TEST TEST TEST Chris gearheart's test 
 
 
 ```
