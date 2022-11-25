@@ -81,7 +81,33 @@ trainstan <- train[-1] %>% scale()
 trainpca <- prcomp(trainstan, scale = TRUE)
 
 
-# Ideal number of components suggested by three methods
+# Ideal number of components suggested by three methods 
+
+
+############ POSSIBLE PCA SOLUTION ###############
+
+df_stan <- df[-1]
+df.pca <- prcomp(df_stan, scale = TRUE)
+
+eigenvectors <- df.pca$rotation #Eigenvectors are contained in the $rotation 
+eigenvectors.PC1_PC4 <- eigenvectors[,1:4] #First 4 Principal Componenets
+df_matrix <- df[-1] %>% scale() %>% as.matrix() # Convert to Matrix for multiplication
+
+pca_oj <- df_matrix %*% eigenvectors.PC1_PC4 # Multiply standardized data matrix by eigenvectors
+round(cor(pca_oj), 3) #Check to see if multicollinearity was resolved
+
+df_pca <- cbind(df[1],pca_oj) # Rebuild dataset after eigenvalue transformation
+
+#Split PCA data
+purchase_testtrain <- initial_split(df_pca, prop = 0.75, strata = Purchase) 
+pca.train <- training(purchase_testtrain)
+pca.test <- testing(purchase_testtrain)
+
+
+mod3<- glm(Purchase ~ ., data = pca.train,family=binomial(link='logit')) # Logistic Regression using PCA data
+summary(mod3)
+
+#########################################################
 
 # The explained variance method shows us that four variables account for a minimum 75% of variance explained power in the method. See `Cumulative proportion` at PC4.
 summary(trainpca)
@@ -163,7 +189,7 @@ vi_values
 
 ```
 
-the most important variable is `r vi_values$Variable[1]` with a `r round(vi_values$Importance[1] *100, 4)`%
+the most important variable is `r vi_values$Variable[1]` with a `r round(vi_values$Importance[1] *100, 2)`%, followed by `r vi_values$Variable[2]` with a `r round(vi_values$Importance[2] *100, 2)`%
 
 ```{r XAI, warning=FALSE, echo=TRUE}
 
