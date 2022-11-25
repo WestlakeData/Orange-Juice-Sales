@@ -86,17 +86,16 @@ trainpca <- prcomp(trainstan, scale = TRUE)
 
 ############ POSSIBLE PCA SOLUTION ###############
 
-df_stan <- df[-1]
-df.pca <- prcomp(df_stan, scale = TRUE)
+df.pca <- prcomp(df[-1], scale = TRUE)
 
 eigenvectors <- df.pca$rotation #Eigenvectors are contained in the $rotation 
-eigenvectors.PC1_PC4 <- eigenvectors[,1:4] #First 4 Principal Componenets
+eigenvectors.PC1_PC4 <- eigenvectors[,1:4] #First 4 Principal Components
 df_matrix <- df[-1] %>% scale() %>% as.matrix() # Convert to Matrix for multiplication
 
 pca_oj <- df_matrix %*% eigenvectors.PC1_PC4 # Multiply standardized data matrix by eigenvectors
 round(cor(pca_oj), 3) #Check to see if multicollinearity was resolved
 
-df_pca <- cbind(df[1],pca_oj) # Rebuild dataset after eigenvalue transformation
+df_pca <- cbind(df[1],pca_oj) # Rebuild data set after eigenvalue transformation
 
 #Split PCA data
 purchase_testtrain <- initial_split(df_pca, prop = 0.75, strata = Purchase) 
