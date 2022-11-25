@@ -139,9 +139,12 @@ oj_tune <- oj_workflow %>% tune_grid(resamples = purchase_folds,
 
 best_bt_model <- oj_tune %>% select_best('accuracy') #Select best Hyper-parameters from grid
 
-best_bt_model
+#best_bt_model
 
 ```
+
+
+The hyperparameters for number of trees, tree depth, and learn rate for the boosted tree model were tuned using a grid with 5 levels and 4-fold cross validation.  Hyperparameter performance was evaluated by overall model accuracy of prediction. The final hyperparameters for the model are number of trees (`r best_bt_model$trees`), tree depth (`r best_bt_model$tree_depth`), and learn rate (`r best_bt_model$learn_rate`).
 
 ```{r boosted trees final model, warning=FALSE, echo=TRUE}
 
@@ -153,11 +156,10 @@ final_fit %>% collect_metrics()
 
 oj_final_workflow %>% fit(data = train) %>% extract_fit_parsnip() %>% vip(geom = 'col') #Plot most important variables based upon Variable Importance metric
 
+
 vi_values <- oj_final_workflow %>% fit(data = train) %>% extract_fit_parsnip() %>% vi()
 
 vi_values
-vi_gt_1 <- vi_values %>% filter(Importance >= 0.01)
-vi_gt_1
 
 ```
 
