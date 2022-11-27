@@ -126,10 +126,10 @@ text(1,0.15,labels=paste("AUC = ",round(auc_ROCR@y.values[[1]],
 
 Gearheart @ Porter: This is more in line with what we were provided this term, but I haven't cracked how to get a tidy AUC printout. 
 
-```{r logistic regression - , warning=FALSE}
+```{r logistic regression, echo=TRUE, warning=FALSE}
 
 # Logistic regression model with all variables
-logmod1 <- glm(Purchase ~ ., data = train,family=binomial(link='logit'))
+logmod1 <- glm(Purchase ~ ., data = train, family=binomial(link='logit'))
 summary(logmod1)
 summary(logmod1)$aic
 DescTools::PseudoR2(logmod1, which = "McFaddenAdj")
@@ -141,12 +141,12 @@ test$binary_prediction <- as.factor(test$binary_prediction)
 
 # Comparing predictions for accuracy against test set
 test <- test %>% mutate(accurate = 1*(binary_prediction == Purchase))
-accuracy <- sum(test$accurate)/nrow(test)
+acc_1 <- sum(test$accurate)/nrow(test)
 
-print (paste("Accuracy:",round(accuracy,3)))
+print (paste("Accuracy:",round(acc_1,3)))
 
-t(confusionMatrix(test$binary_prediction, test$Purchase, positive = "1")$table)
-confusionMatrix(test$binary_prediction, test$Purchase, positive = "1")$byClass
+#t(confusionMatrix(test$binary_prediction, test$Purchase, positive = "1")$table)
+#confusionMatrix(test$binary_prediction, test$Purchase, positive = "1")$byClass
 
 
 # Logistic regression with only the significant variables
@@ -167,11 +167,11 @@ accuracyL <- sum(test$accurateL)/nrow(test)
 
 print (paste("Accuracy:",round(accuracyL,3)))
 
-t(confusionMatrix(test$binary_prediction4, test$Purchase, positive = "1")$table)
-confusionMatrix(test$binary_prediction4, test$Purchase, positive = "1")$byClass
+#t(confusionMatrix(test$binary_prediction4, test$Purchase, positive = "1")$table)
+#confusionMatrix(test$binary_prediction4, test$Purchase, positive = "1")$byClass
 
 
-print (paste("Accuracy with four variables:",round(accuracy4,3)))
+#print (paste("Accuracy with four variables:",round(accuracy4,3)))
 ```
 
 
