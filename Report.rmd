@@ -6,8 +6,6 @@ date: "`r Sys.Date()`"
 output: pdf_document
 ---
 
-\newpage
-
 ```{r library calls, include=FALSE, warning=FALSE}
 library(tidyverse)
 library(tidymodels)
@@ -24,7 +22,14 @@ library(glmnet)
 ```
 
 ## Introduction
-Wasatch Grocery Chain (WGC) is a regional grocery chain operating in the Intermoutain West of the US. WGC sells two brands of orange juice in its stores, Citrus Hill (CH) and Minute Maid (MM) of which MM is the more profitable to the company.  This report will identify what customer factors within available data contribute to purchase of MM over CH, as well as to what degree these factors influence customer choice.  In addition, a predictive model is created that will allow the Sales Department to identify other customers within our customer base that are more likely to purchase Minute Maid brand orange juice, thus driving profitability across the company.
+
+Wasatch Grocery Chain (WGC) is a regional grocery chain operating in the Intermoutain West of the US. WGC sells two brands of orange juice in its stores, Citrus Hill (CH) and Minute Maid (MM) of which MM is the more profitable to the company. This report will identify **what customer factors** within available data **contribute to purchase of Minute Maid over Citrus Hill**, as well as **to** **what degree these factors influence customer choice**. In addition, a predictive model is created that will allow the Sales Department to identify other customers within our customer base that are more likely to purchase Minute Maid brand orange juice, thus driving profitability across the company.
+
+#### Available Data
+
+The data set used in this report contains 13 possible predictor variables as well as 1 outcome variable, Purchase, which records whether or not a customer purchased MM. There are a total of 1070 observations in the data set. The data set was further partitioned into a **training** data set, containing `r nrow(train)` observations, and a validation **testing** data set containing `r nrow(test)` observations.
+
+The code below imports the data set, coverts the binary `Purchase` outcome into a factor, and pulls out 25% of the observations as a hold-out set or test set against which our final model can be tested. Doing so helps us avoid the mistake of training a model that performs well against the sample data, but fails to generalize to a new data set from the same population.
 
 ```{r setup}
 set.seed(1234)
@@ -38,60 +43,56 @@ test <- testing(purchase_testtrain)
 
 ```
 
-### Available Data 
-The data set used in this report contains 13 possible predictor variables as well as 1 outcome variable, Purchase, which records whether or not a customer purchased MM.  There are a total of 1070 observations in the data set.  The data set was further partitioned into a **training** data set, containing `r nrow(train)` observations, and a validation **testing** data set containing `r nrow(test)` observations.
+#### 
 
 ## Methods
 
-<!-- To be filled out once analysis has been completed -->
-**Logistic Regression:**
+#### **Logistic Regression:**
 
-**Principle Component Analysis (PCA):** PCA is a mathematical method to combine the portions of correlated independent variables into principle component vectors that allow for the elimination of multicollinearity between original independent variables. In this report the *prcomp()* function from the {stats} package was used to complete PCA.
+WGC's management team wants to know **which variables contribute to an customer outcome of "Yes; Purchased Minute Maid**." Their goal matches the strengths of a logistic regression, which can explain the strength and direction of independent variables' effects on a binary classification outcome (often yes/no or is/is not). This algorithm will tell management which variables push customers towards or away from a Minute Maid purchase, plus which variables have no bearing on the outcome. Significant variables proven to have big enough effects can become levers for action or intervention for management.
 
-**Boosted Decision Trees:**
+##### Pre-processing 
 
+Logistic regressions work when:
 
+1.  Qualitative variable have been turned into quantitative dummy variables.
 
-## Results
+2.  No columns are uniformly filled with one unique value
 
-1.	What predictor variables influence the purchase of MM?
-2.	Are all the variables in the dataset effective or are some more effective than others?
-3.	How confident are you in your recommendations?
-4.	Based on your analysis what are the specific recommendations you have for the brand manager?
+3.  There is no missing data.
 
-```{r logistic regression - Pre-processing, warning=FALSE}
+4.  There is no correlation between the variables.
 
-set.seed(1234)
+Fortunately, the first three conditions were already true of our dataset.
 
-# Pre-processing
-# Dummy variables are unnecessary because only `Purchase` is a factor, and it's already expressed using dummy variables.
+```{r logreg - preproc1, warning=FALSE}
 
-# No columns are uniformly filled with one unique value — there is spread in each of the 13 independent variables.
+# 1. Dummy variables are unnecessary because only `Purchase` is a factor, and it's already expressed using dummy variables.
+
+# 2. No columns are uniformly filled with one unique value — there is spread in each of the 13 independent variables.
 summary(train)
 
-# There is no missing data — imputation is not necessary
+# 3. There is no missing data — imputation is not necessary
 sum(is.na(train))
+```
 
-# A correlogram of our data set confirms that several variables are highly correlated -- a sure sign of multicollinearity. 
+A correlogram confirms that there is high correlation between the thirteen variables. Some of them appear to be multicollinear, or not fully independent of one another.
+
+```{r logreg - preproc2, warning=FALSE}
 
 corr <- cor(df[-1]) 
 corr %>% cor() %>% corrplot()
 ```
-Gearheart @ Porter: I worry I may be overthinking this, but I couldn't find anything from our class material that concretely explained how to handle multicollinearity in the context of a logistic regression, so I drew on our class materials from Algos for Business Decisions. 
 
-Pros: 
+Accordingly, our team decided to use the "Lasso" method of logistic regression that regresses all variables against all other variables, modifying each variable's predictive weight based on its correlation to to other variables by strengthening, weakening, or even nullifying its effect.
 
-The code below performs a logistic regression, but it uses Lasso (`alpha = 1`), giving us something to say about the magnitude and direction of variables, plus which variables' influences were shrunk to zero when all variables were regressed against each other (`Price MM`, `Disc CH`, `SalePriceCH`, and `PctDiscCH`). *Doing that gives us an AUC of 0.9*, and that's *after* inline k-fold validation of 7 when training the model.
+##### Variable selection and model design 
 
-Cons: 
+The `cv.glmnet` function below does that work by finding THEBESTWAYTOSUCCINCTLYDESCRIBEIT, ultimately printing out coefficients for each variable that have been penalized or nullified if their relationship to other variables is multicollinear.
 
-If the goal is to imitate the kind of information given to us in the class, the things below are missing. Which ones you think are work including before we submit?
-  + Model comparison of AUC charts comparing more than one models
-  + A confusion matrix for this model. The approach doesn't add columns to the `test` sheet with binary predictions that are easy to compose the matrix. Do you think it's worth it to do that?
-  + Charts graphically showing the effect of different variables on `Purchase`.
+Additionally, in a microcosm of the training/test split we set up at the beginning of the project, this method cross-validates the results of the trained regression by testing it against seven different one-seventh chunks of the entire set.
 
-
-```{r logistic regression - Option 1 - Drawn from Algos for Buss Dec class , warning=FALSE}
+```{r Lasso logistic regression, warning=FALSE}
 
 predictors <- train[,c(2:13)]
 purchase_only <- train$Purchase
@@ -112,7 +113,19 @@ plot(cv.binomial)
 (best.lambda <- cv.binomial$lambda.min)
 y4<- coef(cv.binomial, s="lambda.min", exact=FALSE)
 print(y4)
+```
 
+Since the Lasso function of the regression has shrunk the effects of `PriceMM`, `DiscCH`, `SalesPriceCH` and `PctDiscCH` to zero or "`.`" in light of multicollinearity, management can be confident that those variables are not meaningful levers for action.
+
+##### Performance against test data 
+
+The predictions of this logistic regression performed well against the ground truth outcomes in the test set held in reserve at the beginning of our analysis.
+
+Our regression turned variables into percentage likelihoods, but it is up to the analyst to decide what percentage triggers a label of "Yes; Purchased MinuteMaid", a decision called the "classification threshold." The area-under-the-curve (AUC) metric is a sign of an model's general performance across those different thresholds --- a higher AUC means a model is good at balancing the risk of true positives to true negatives.
+
+The area-under-curve for this model is 0.90.
+
+```{r Lasso logistic regression, warning=FALSE}
 
 test_predictors <- test[,c(2:13)]
 test_predictors <- data.matrix(test_predictors)
@@ -131,56 +144,18 @@ text(1,0.15,labels=paste("AUC = ",round(auc_ROCR@y.values[[1]],
 
 ```
 
-Gearheart @ Porter: This is more in line with what we were provided this term, but I haven't cracked how to get a tidy AUC printout. 
+#### **Boosted Decision Trees:**
 
-```{r logistic regression, echo=TRUE, warning=FALSE}
+Management also wants to be able to predict the likelihood that any given future customer will buy Minute Maid. Knowing how many customers are likely to purchase Minute Maid can help in (1) forecasting cash flow and supply chain demand and (2) targeting marketing to customers who are in the ideal position to buy and ignoring those who are not.
 
-# Logistic regression model with all variables
-logmod1 <- glm(Purchase ~ ., data = train, family=binomial(link='logit'))
-summary(logmod1)
-summary(logmod1)$aic
-DescTools::PseudoR2(logmod1, which = "McFaddenAdj")
+## Results
 
-# Making and processing predictions for cross-validation with test set
-test$prediction <- predict(logmod1, newdata = test, type ="response")
-test$binary_prediction <- ifelse(test$prediction > 0.5,1,0)
-test$binary_prediction <- as.factor(test$binary_prediction)
+1.  What predictor variables influence the purchase of MM?
+2.  Are all the variables in the dataset effective or are some more effective than others?
+3.  How confident are you in your recommendations?
+4.  Based on your analysis what are the specific recommendations you have for the brand manager?Pros:
 
-# Comparing predictions for accuracy against test set
-test <- test %>% mutate(accurate = 1*(binary_prediction == Purchase))
-acc_1 <- sum(test$accurate)/nrow(test)
-
-print (paste("Accuracy:",round(acc_1,3)))
-
-#t(confusionMatrix(test$binary_prediction, test$Purchase, positive = "1")$table)
-#confusionMatrix(test$binary_prediction, test$Purchase, positive = "1")$byClass
-
-
-# Logistic regression with only the significant variables
-logmod2 <- glm(Purchase ~ PriceDiff + LoyalCH, data = train,family=binomial(link='logit'))
-
-summary(logmod2)
-summary(logmod2)$aic
-DescTools::PseudoR2(logmod2, which = "McFaddenAdj")
-
-# Making and processing predictions for cross-validation with test set
-test$predictionL <- predict(logmod2, newdata = test, type ="response")
-test$binary_predictionL <- ifelse(test$predictionL > 0.5,1,0)
-test$binary_predictionL <- as.factor(test$binary_predictionL)
-
-# Testing predictions for accuracy against test set
-test <- test %>% mutate(accurateL = 1*(binary_predictionL == Purchase))
-accuracyL <- sum(test$accurateL)/nrow(test)
-
-print (paste("Accuracy:",round(accuracyL,3)))
-
-#t(confusionMatrix(test$binary_prediction4, test$Purchase, positive = "1")$table)
-#confusionMatrix(test$binary_prediction4, test$Purchase, positive = "1")$byClass
-
-
-#print (paste("Accuracy with four variables:",round(accuracy4,3)))
-```
-
+The code below performs a logistic regression, but it uses Lasso (`alpha = 1`), giving us something to say about the magnitude and direction of variables, plus which variables' influences were shrunk to zero when all variables were regressed against each other (`Price MM`, `Disc CH`, `SalePriceCH`, and `PctDiscCH`). **Doing that gives us an AUC of 0.9**, and that's after inline k-fold validation of 7 when training the model.
 
 ```{r boosted trees model tuning, warning=FALSE, echo=TRUE}
 set.seed(1234)
@@ -207,8 +182,7 @@ best_bt_model <- oj_tune %>% select_best('accuracy') #Select best Hyper-paramete
 
 ```
 
-
-The hyperparameters for number of trees, tree depth, and learn rate for the boosted tree model were tuned using a grid with 5 levels and 4-fold cross validation.  Hyperparameter performance was evaluated by overall model accuracy of prediction. The final hyperparameters for the model are number of trees (`r best_bt_model$trees`), tree depth (`r best_bt_model$tree_depth`), and learn rate (`r best_bt_model$learn_rate`).
+The hyperparameters for number of trees, tree depth, and learn rate for the boosted tree model were tuned using a grid with 5 levels and 4-fold cross validation. Hyperparameter performance was evaluated by overall model accuracy of prediction. The final hyperparameters for the model are number of trees (`r best_bt_model$trees`), tree depth (`r best_bt_model$tree_depth`), and learn rate (`r best_bt_model$learn_rate`).
 
 ```{r boosted trees final model, warning=FALSE, echo=TRUE}
 
@@ -227,7 +201,7 @@ vi_values
 
 ```
 
-the most important variable is Customer Brand Loyalty to Citrus Hill(`r vi_values$Variable[1]`) with `r round(vi_values$Importance[1] *100, 2)`% importance, followed by Price Difference(`r vi_values$Variable[2]`) with `r round(vi_values$Importance[2] *100, 2)`% importance.  All other independent variables displayed importance of <3%.
+the most important variable is Customer Brand Loyalty to Citrus Hill(`r vi_values$Variable[1]`) with `r round(vi_values$Importance[1] *100, 2)`% importance, followed by Price Difference(`r vi_values$Variable[2]`) with `r round(vi_values$Importance[2] *100, 2)`% importance. All other independent variables displayed importance of \<3%.
 
 ```{r XAI, warning=FALSE, echo=TRUE}
 
@@ -273,6 +247,7 @@ plot(pdp_PriceDiff)
 ### Sales
 
 ## Appendix 1: Data Characteristics
+
 ```{r Appendix 1 Data Characteristics, echo=TRUE, warning=FALSE}
 summary(df)
 summary(test)
