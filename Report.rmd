@@ -44,6 +44,13 @@ The data set used in this report contains 13 possible predictor variables as wel
 ## Methods
 
 <!-- To be filled out once analysis has been completed -->
+**Logistic Regression:**
+
+**Principle Component Analysis (PCA):** PCA is a mathematical method to combine the portions of correlated independent variables into principle component vectors that allow for the elimination of multicollinearity between original independent variables. In this report the *prcomp()* function from the {stats} package was used to complete PCA.
+
+**Boosted Decision Trees:**
+
+
 
 ## Results
 
@@ -220,7 +227,7 @@ vi_values
 
 ```
 
-the most important variable is `r vi_values$Variable[1]` with a `r round(vi_values$Importance[1] *100, 2)`%, followed by `r vi_values$Variable[2]` with a `r round(vi_values$Importance[2] *100, 2)`%
+the most important variable is Customer Brand Loyalty to Citrus Hill(`r vi_values$Variable[1]`) with `r round(vi_values$Importance[1] *100, 2)`% importance, followed by Price Difference(`r vi_values$Variable[2]`) with `r round(vi_values$Importance[2] *100, 2)`% importance.  All other independent variables displayed importance of <3%.
 
 ```{r XAI, warning=FALSE, echo=TRUE}
 
