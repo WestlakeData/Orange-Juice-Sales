@@ -7,7 +7,7 @@ output:
   pdf_document: default
   html_document: default
 ---
-
+\newpage
 
 ```{r library calls, include=FALSE, warning=FALSE}
 library(tidyverse)
@@ -23,7 +23,7 @@ library(plotROC)
 library(glmnet)
 
 ```
-```{r setup}
+```{r setup, echo=TRUE}
 set.seed(1234)
 df <- read.csv(url("http://data.mishra.us/files/project/OJ_data.csv"))
 df[-1] <- lapply(df[-1],as.numeric)
@@ -65,7 +65,7 @@ Logistic regressions work when:
 
 Fortunately, the first three conditions were already true of our dataset.
 
-```{r logreg - preproc1, warning=FALSE}
+```{r logreg - preproc1, warning=FALSE, echo=TRUE}
 
 # 1. Dummy variables are unnecessary because only `Purchase` is a factor, and it's already expressed using dummy variables.
 
@@ -78,7 +78,7 @@ sum(is.na(train))
 
 A correlogram confirms that there is high correlation between the thirteen variables. Some of them appear to be multicollinear, or not fully independent of one another.
 
-```{r logreg - preproc2, warning=FALSE}
+```{r logreg - preproc2, warning=FALSE, echo=TRUE}
 
 corr <- cor(df[-1]) 
 corr %>% cor() %>% corrplot()
@@ -94,7 +94,7 @@ Additionally, in a microcosm of the training/test split we set up at the beginni
 
 The code below performs a logistic regression, but it uses Lasso (`alpha = 1`), giving us something to say about the magnitude and direction of variables, plus which variables' influences were shrunk to zero when all variables were regressed against each other (`Price MM`, `Disc CH`, `SalePriceCH`, and `PctDiscCH`). **Doing that gives us an AUC of 0.9**, and that's after inline k-fold validation of 7 when training the model.
 
-```{r Lasso logistic regression, warning=FALSE}
+```{r Lasso logistic regression, warning=FALSE, echo=TRUE}
 
 predictors <- train[,c(2:13)]
 purchase_only <- train$Purchase
@@ -127,7 +127,7 @@ Our regression turned variables into percentage likelihoods, but it is up to the
 
 The area-under-curve for this model is 0.90.
 
-```{r Lasso logistic regression 2, warning=FALSE}
+```{r Lasso logistic regression 2, warning=FALSE, echo=TRUE}
 
 test_predictors <- test[,c(2:13)]
 test_predictors <- data.matrix(test_predictors)
@@ -220,7 +220,7 @@ pdp <- model_profile(explainer_rf,
 
 ```
 In addition to understanding which variables are important for management to focus on, it is also important to understand how those variables interact with the prediction for Minute Maid purchases by the customer.  It is useful to know that Brand Loyalty is important, but even more useful to know how to use that lever to identify potential crossover customers.  Partial Dependence Profiling (PDP) allows some insight what is happening inside a blackbox model such as GBTs.  The above plot shows the partial independent portion of a variable's influence on the dependent outcome variable. Comparable to information that can be obtained from linear or logistic regression.   
-```{r Brand Loyalty PDP}
+```{r Brand Loyalty PDP, echo=TRUE, warning=FALSE}
 plot(pdp, title='Partial Dependence Profiles', subtitle=' ')
 ```
 Both variables display a positive relationship with the purchase of Minute Maid.  Meaning, that the more Brand Loyalty a customer displays towards Citrus Hill and the larger the price difference between MM and CH (in Citrus Hill's favor) the more likely the customer was to purchase Minute Maid.  This would seem to be counter-intuitive and so it was verified by looking at the original data, where this observation was supported (see below).  This would seem to indicate that there is a unique positioning opportunity for Minute Maid in WGC stores.
@@ -233,6 +233,7 @@ At the beginning of this project we met with stakeholders in the Branding and Sa
 
 ### Brand
 1. What predictor variables influence the purchase of MM?
+Both the logistic model and the explanatory analysis supporting the gradient boosted trees model give us insight into the predictor variables which influence the purchase of Minute Maid orange juice by our customers.
 2. Are all the variables in the dataset effective or are some more effective than
 others?
 3. How confident are you in your recommendations?
@@ -245,6 +246,7 @@ customers buying MM?
 2. How good is the model in its predictions?
 3. How confident are you in your recommendations?
 
+\newpage
 ## Appendix 1: Data Characteristics
 
 ```{r Appendix 1 Data Characteristics, echo=TRUE, warning=FALSE}
@@ -258,5 +260,5 @@ testDf <- cor.mtest(df[-1], conf.level = 0.95) #compute significance of correlat
 corrplot(corr, p.mat = testDf$p, method = 'number', type = 'lower', insig='blank', 
          addCoef.col ='black', number.cex = 0.6, order = 'AOE', diag=FALSE, tl.srt = 45, tl.col = 'black')
 
-
+ggplot2::ggplot(df, aes(PctDiscMM, color=Purchase)) + geom_density() + scale_color_discrete(name='Purchased MM', labels=c("No","Yes")) + labs(title = 'Observed Customer Behavior')
 ```
