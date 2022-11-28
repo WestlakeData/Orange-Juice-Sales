@@ -20,17 +20,6 @@ library(plotROC)
 library(glmnet)
 
 ```
-
-## Introduction
-
-Wasatch Grocery Chain (WGC) is a regional grocery chain operating in the Intermoutain West of the US. WGC sells two brands of orange juice in its stores, Citrus Hill (CH) and Minute Maid (MM) of which MM is the more profitable to the company. This report will identify **what customer factors** within available data **contribute to purchase of Minute Maid over Citrus Hill**, as well as **to** **what degree these factors influence customer choice**. In addition, a predictive model is created that will allow the Sales Department to identify other customers within our customer base that are more likely to purchase Minute Maid brand orange juice, thus driving profitability across the company.
-
-#### Available Data
-
-The data set used in this report contains 13 possible predictor variables as well as 1 outcome variable, Purchase, which records whether or not a customer purchased MM. There are a total of 1070 observations in the data set. The data set was further partitioned into a **training** data set, containing `r nrow(train)` observations, and a validation **testing** data set containing `r nrow(test)` observations.
-
-The code below imports the data set, coverts the binary `Purchase` outcome into a factor, and pulls out 25% of the observations as a hold-out set or test set against which our final model can be tested. Doing so helps us avoid the mistake of training a model that performs well against the sample data, but fails to generalize to a new data set from the same population.
-
 ```{r setup}
 set.seed(1234)
 df <- read.csv(url("http://data.mishra.us/files/project/OJ_data.csv"))
@@ -40,8 +29,16 @@ purchase_testtrain <- initial_split(df, prop = 0.75, strata = Purchase)
 train <- training(purchase_testtrain)
 test <- testing(purchase_testtrain)
 
-
 ```
+## Introduction
+
+Wasatch Grocery Chain (WGC) is a regional grocery chain operating in the Intermoutain West of the US. WGC sells two brands of orange juice in its stores, Citrus Hill (CH) and Minute Maid (MM) of which MM is the more profitable to the company. This report will identify **what customer factors** within available data **contribute to purchase of Minute Maid over Citrus Hill**, as well as **to** **what degree these factors influence customer choice**. In addition, a predictive model is created that will allow the Sales Department to identify other customers within our customer base that are more likely to purchase Minute Maid brand orange juice, thus driving profitability across the company.
+
+#### Available Data
+
+The data set used in this report contains 13 possible predictor variables as well as 1 outcome variable, Purchase, which records whether or not a customer purchased MM. There are a total of 1070 observations in the data set. The data set was further partitioned into a **training** data set, containing `r nrow(train)` observations, and a validation **testing** data set containing `r nrow(test)` observations.
+
+The code below imports the data set, coverts the binary `Purchase` outcome into a factor, and pulls out 25% of the observations as a hold-out set or test set against which our final model can be tested. Doing so helps us avoid the mistake of training a model that performs well against the sample data, but fails to generalize to a new data set from the same population.
 
 #### 
 
@@ -125,7 +122,7 @@ Our regression turned variables into percentage likelihoods, but it is up to the
 
 The area-under-curve for this model is 0.90.
 
-```{r Lasso logistic regression, warning=FALSE}
+```{r Lasso logistic regression 2, warning=FALSE}
 
 test_predictors <- test[,c(2:13)]
 test_predictors <- data.matrix(test_predictors)
@@ -144,7 +141,7 @@ text(1,0.15,labels=paste("AUC = ",round(auc_ROCR@y.values[[1]],
 
 ```
 
-#### **Boosted Decision Trees:**
+#### **Gradient Boosted Decision Trees:**
 
 Management also wants to be able to predict the likelihood that any given future customer will buy Minute Maid. Knowing how many customers are likely to purchase Minute Maid can help in (1) forecasting cash flow and supply chain demand and (2) targeting marketing to customers who are in the ideal position to buy and ignoring those who are not.
 
