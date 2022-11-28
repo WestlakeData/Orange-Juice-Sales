@@ -238,32 +238,14 @@ explainer_rf <- explain_tidymodels(model_fitted,
                                    y = train$Purchase, 
                                    type = "pdp",verbose = FALSE)
 
-pdp_LoyalCH <- model_profile(explainer_rf, 
-                             variables = "LoyalCH", 
-                             N=NULL)
-pdp_PriceDiff <- model_profile(explainer_rf, 
-                                variables = "PriceDiff", 
-                                N=NULL)
-pdp_DiscCH <- model_profile(explainer_rf, 
-                             variables = "DiscCH", 
-                             N=NULL)
-pdp_ListPriceDiff <- model_profile(explainer_rf, 
-                             variables = "ListPriceDiff", 
-                             N=NULL)
-pdp_SalePriceMM <- model_profile(explainer_rf, 
-                             variables = "SalePriceMM", 
-                             N=NULL)
-pdp_DiscMM <- model_profile(explainer_rf, 
-                             variables = "DiscMM", 
+pdp <- model_profile(explainer_rf, 
+                             variables = c("LoyalCH","PriceDiff"),
                              N=NULL)
 
-plot(pdp_LoyalCH)
-plot(pdp_PriceDiff)
-#plot(pdp_DiscCH)
-#plot(pdp_ListPriceDiff)
-#plot(pdp_SalePriceMM)
-#plot(pdp_DiscMM)
-
+```
+Boosted Trees models do not provide a great deal of transparency into the relationship between predictor variables and the the outcome.  In order to better understand how the important predictor variables are influencing the prediction, we need to 
+```{r Brand Loyalty PDP}
+plot(pdp, title='Partial Dependence Profiles', subtitle=' ')
 ```
 
 ## Conclusions and Recommendations
