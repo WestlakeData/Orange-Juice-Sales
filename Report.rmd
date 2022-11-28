@@ -245,5 +245,5 @@ testDf <- cor.mtest(df[-1], conf.level = 0.95) #compute significance of correlat
 corrplot(corr, p.mat = testDf$p, method = 'number', type = 'lower', insig='blank', 
          addCoef.col ='black', number.cex = 0.6, order = 'AOE', diag=FALSE, tl.srt = 45, tl.col = 'black')
 
-
+ggplot2::ggplot(df, aes(LoyalCH, PriceDiff, color=Purchase)) + geom_point()
 ```
