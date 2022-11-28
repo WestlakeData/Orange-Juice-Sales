@@ -232,13 +232,11 @@ ggplot2::ggplot(df, aes(LoyalCH, PriceDiff, color=Purchase)) + geom_hline(yinter
 At the beginning of this project we met with stakeholders in the Branding and Sales departments and identified key deliverables to ensure that this project provided actionable information and value to the company.  Based upon our work we suggest the following interpretations and courses of action moving forward.
 
 ### Brand
-1. What predictor variables influence the purchase of MM?
-Both the logistic model and the explanatory analysis supporting the gradient boosted trees model give us insight into the predictor variables which influence the purchase of Minute Maid orange juice by our customers.
-2. Are all the variables in the dataset effective or are some more effective than
-others?
-3. How confident are you in your recommendations?
-4. Based on your analysis what are the specific recommendations you have for the
-brand manager?
+Both the logistic model and the explanatory analysis supporting the gradient boosted trees model give us insight into the predictor variables which influence the purchase of Minute Maid orange juice by our customers. Both models tell us that `LoyalCH`($\beta B$ = 6.64, i = 82.4%) and `PriceDiff`(3.52, 10.4%) are primary contributors to a customers decision to purchase Minute Maid.  Additionally, the logistic model places a lot of value on `DiscMM`($\beta B$ = -13.21) and `PctDiscMM`($\beta B$ = 31.52). `PriceMM`, `DiscCH`, `SalesPriceCH` and `PctDiscCH` do not contribute significantly to predicting customer behavior.  All other variables are of limited significance, and do not likely provide additional insight into customer behavior.
+
+When examined holistically, it becomes apparent that two major factors are supported by the data. First, that customers that exhibit high levels of Citrus Hill Brand Loyalty are more likely to purchase Minute Maid. Second, that both discounting of Minute Maid and price parity between Minute Maid and Citrus Hill have antagonistic effects on customers choosing to purchase Minute Maid brand orange juice.  These factors support the concept that Minute Maid should be positioned as a Premium brand within WGC stores, and that efforts to discount or price match Citrus Hill erode the customers perception of Minute Maid as a premium brand and should be avoided.  It also supports the fact that loyal Citrus Hill purchasers can more appropriately be viewed as loyal Orange Juice purchasers and that targeting this customer segment with marketing techniques that enhance the perception of Minute Maid as a premium brand may lead to customer conversion.
+
+Both models showed remarkable accuracy at predicting Minute Maid customer purchases as measured by AUC (LR = 0.90, GBT = 0.89).  We can be very confident that these models are accurately capturing customer behavior.  Understanding the factors which are making the models so accurate allows us to be equally confident in the recommendations arising from these models.  Also of note is the fact that both methodologies independently found similar factors to be at work.
 
 ### Sales
 1. Can you build a predictive model that can inform him the probability of
@@ -260,5 +258,5 @@ testDf <- cor.mtest(df[-1], conf.level = 0.95) #compute significance of correlat
 corrplot(corr, p.mat = testDf$p, method = 'number', type = 'lower', insig='blank', 
          addCoef.col ='black', number.cex = 0.6, order = 'AOE', diag=FALSE, tl.srt = 45, tl.col = 'black')
 
-ggplot2::ggplot(df, aes(PctDiscMM, color=Purchase)) + geom_density() + scale_color_discrete(name='Purchased MM', labels=c("No","Yes")) + labs(title = 'Observed Customer Behavior')
+ggplot2::ggplot(df, aes(PctDiscMM, color=Purchase)) + geom_density() + scale_color_discrete(name='Purchased MM', labels=c("No","Yes")) + labs(title = 'Density plot of Observations for PctDiscMM')
 ```
