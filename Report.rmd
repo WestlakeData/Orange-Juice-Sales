@@ -226,13 +226,13 @@ plot(pdp, title='Partial Dependence Profiles', subtitle=' ')
 Both variables display a positive relationship with the purchase of Minute Maid.  Meaning, that the more Brand Loyalty a customer displays towards Citrus Hill and the larger the price difference between MM and CH (in Citrus Hill's favor) the more likely the customer was to purchase Minute Maid.  This would seem to be counter-intuitive and so it was verified by looking at the original data, where this observation was supported (see below).  This would seem to indicate that there is a unique positioning opportunity for Minute Maid in WGC stores.
 
 ```{r LoyaltyCH vs PriceDiff plot, echo=TRUE, warning=FALSE}
-ggplot2::ggplot(df, aes(LoyalCH, PriceDiff, color=Purchase)) + geom_hline(yintercept = 0) + geom_point() + scale_color_discrete(name='Purchased MM', labels=c("No","Yes")) + labs(x='Brand Loyalty (Citrus Hill)', y='Price Difference', title = 'Observed Customer Behavior') + theme(axis.line.y = element_line(color = 'black'), panel.background = element_blank(), legend.key=element_rect(fill = 'white'))
+ggplot2::ggplot(df, aes(LoyalCH, color=Purchase)) + geom_density() + scale_color_discrete(name='Purchased MM', labels=c("No","Yes")) + labs(title = 'Density plot of Observations for LoyalCH')
 ```
 ## Conclusions and Recommendations
 At the beginning of this project we met with stakeholders in the Branding and Sales departments and identified key deliverables to ensure that this project provided actionable information and value to the company.  Based upon our work we suggest the following interpretations and courses of action moving forward.
 
 ### Brand
-Both the logistic model and the explanatory analysis supporting the gradient boosted trees model give us insight into the predictor variables which influence the purchase of Minute Maid orange juice by our customers. Both models tell us that `LoyalCH`($\beta B$ = 6.64, i = 82.4%) and `PriceDiff`(3.52, 10.4%) are primary contributors to a customers decision to purchase Minute Maid.  Additionally, the logistic model places a lot of value on `DiscMM`($\beta B$ = -13.21) and `PctDiscMM`($\beta B$ = 31.52). `PriceMM`, `DiscCH`, `SalesPriceCH` and `PctDiscCH` do not contribute significantly to predicting customer behavior.  All other variables are of limited significance, and do not likely provide additional insight into customer behavior.
+Both the logistic model and the explanatory analysis supporting the gradient boosted trees model give us insight into the predictor variables which influence the purchase of Minute Maid orange juice by our customers. Both models tell us that `LoyalCH`($\beta B$ = 6.58, i = 82.4%) and `PriceDiff`(3.41, 10.4%) and `PctDiscMM`($\beta B$ = 2.91) are primary contributors to a customers decision to purchase Minute Maid.  `PriceMM`, `DiscCH`, `SalesPriceCH` and `PctDiscCH` do not contribute significantly to predicting customer behavior.  All other variables are of limited significance, and provide little additional insight into customer behavior.
 
 When examined holistically, it becomes apparent that two major factors are supported by the data. First, that customers that exhibit high levels of Citrus Hill Brand Loyalty are more likely to purchase Minute Maid. Second, that both discounting of Minute Maid and price parity between Minute Maid and Citrus Hill have antagonistic effects on customers choosing to purchase Minute Maid brand orange juice.  These factors support the concept that Minute Maid should be positioned as a Premium brand within WGC stores, and that efforts to discount or price match Citrus Hill erode the customers perception of Minute Maid as a premium brand and should be avoided.  It also supports the fact that loyal Citrus Hill purchasers can more appropriately be viewed as loyal Orange Juice purchasers and that targeting this customer segment with marketing techniques that enhance the perception of Minute Maid as a premium brand may lead to customer conversion.
 
@@ -259,4 +259,10 @@ corrplot(corr, p.mat = testDf$p, method = 'number', type = 'lower', insig='blank
          addCoef.col ='black', number.cex = 0.6, order = 'AOE', diag=FALSE, tl.srt = 45, tl.col = 'black')
 
 ggplot2::ggplot(df, aes(PctDiscMM, color=Purchase)) + geom_density() + scale_color_discrete(name='Purchased MM', labels=c("No","Yes")) + labs(title = 'Density plot of Observations for PctDiscMM')
+
+ggplot2::ggplot(df, aes(LoyalCH, color=Purchase)) + geom_density() + scale_color_discrete(name='Purchased MM', labels=c("No","Yes")) + labs(title = 'Density plot of Observations for LoyalCH')
+
+ggplot2::ggplot(df, aes(PriceDiff, color=Purchase)) + geom_density() + scale_color_discrete(name='Purchased MM', labels=c("No","Yes")) + labs(title = 'Density plot of Observations for PriceDiff')
+
+
 ```
