@@ -4,8 +4,8 @@ subtitle: "Identification of Significant Predictor Variables and Predictive Mode
 author: "Chris Gearheart and Chris Porter"
 date: "`r Sys.Date()`"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 \newpage
 
@@ -22,7 +22,9 @@ library(dplyr)
 library(plotROC)
 library(glmnet)
 ```
-```{r setup, echo=TRUE}
+```{r setup}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
+
 set.seed(1234)
 df <- read.csv(url("http://data.mishra.us/files/project/OJ_data.csv"))
 df[-1] <- lapply(df[-1],as.numeric)
@@ -63,7 +65,7 @@ Logistic regressions work when:
 
 Fortunately, the first three conditions were already true of our dataset.
 
-```{r logreg - preproc1, warning=FALSE, echo=TRUE}
+```{r logreg - preproc1}
 
 # 1. Dummy variables are unnecessary because only `Purchase` is a factor, and it's already expressed using dummy variables.
 
@@ -76,7 +78,7 @@ sum(is.na(train))
 
 A correlogram confirms that there is high correlation between the thirteen variables. Some of them appear to be multicollinear, or not fully independent of one another (for correlation coefficients see Appendix).
 
-```{r logreg - preproc2, warning=FALSE, echo=TRUE, fig.cap= "Correlogram of Independent Variables"}
+```{r logreg - preproc2}
 
 corr <- cor(df[-1]) 
 corr %>% cor() %>% corrplot()
@@ -92,7 +94,7 @@ Additionally, in a microcosm of the training/test split we set up at the beginni
 
 The code below performs a logistic regression, but it uses Lasso (`alpha = 1`), giving us something to say about the magnitude and direction of variables, plus which variables' influences were shrunk to zero when all variables were regressed against each other (`Price MM`, `Disc CH`, `SalePriceCH`, and `PctDiscCH`). **Doing that gives us an AUC of 0.9**, and that's after inline k-fold validation of 7 when training the model.
 
-```{r Lasso logistic regression, warning=FALSE, echo=TRUE, fig.cap='Optimal Lambda in terms of AUC'}
+```{r Lasso logistic regression}
 
 predictors <- train[,c(2:13)] %>%
   mutate(
@@ -154,7 +156,7 @@ Our regression turned variables into percentage likelihoods, but it is up to the
 
 The area-under-curve for this model is 0.90.
 
-```{r Lasso logistic regression 2, warning=FALSE, echo=TRUE, fig.cap='ROC-AUC Curve for Logistic Regression Model'}
+```{r Lasso logistic regression 2}
 
 test_predictors <- test[,c(2:13)]
 test_predictors <- data.matrix(test_predictors)
@@ -175,7 +177,7 @@ The AUC tells us how well our model can handle the balance between true and fals
 
 The analysis below lets us know that the optimal classification threshold for our model is $P$ = 0.465 — any customer with that high or higher a likelihood of purchasing MinuteMaid should be classified as "Yes; Will Purchase MinuteMaid." That probability threshold optimally balances the likelihood of true positives and the risk of false positives.
 
-```{r Accuracy and optimal classification threshold, echo=TRUE, warning=FALSE, fig.cap='Optimal Classification Threshold'}
+```{r Accuracy and optimal classification threshold}
 
 # Calculate classification threshold of highest accuracy
 
@@ -209,7 +211,7 @@ Management also wants to be able to predict the likelihood that any given future
 
 Decision tree modelling models the data and assigns a probabilistic decision path to assign classification, in this case either to a likely Minute Maid purchase or not.  However, the way decision trees are assembled can lead to overfitting to the data if the tree is too deep or has too many branches, in addition they are prone to fall prey to data sampling errors, creating trees that reflect the train sample better than they do the ground truth.  To overcome this, Gradient Boosted Trees (GBT) are a machine learning algorithm that overcomes the propensity of decision tree algorithms to overfit the data and susceptibility to data sampling errors.  GBT overcomes this by building a more accurate complex model iteratively by combining many smaller less predictive models.  Each successive round of learning seeks to explain the remaining error left by the previously assembled tree.
 
-```{r boosted trees model tuning, warning=FALSE, echo=TRUE}
+```{r boosted trees model tuning}
 set.seed(1234)
 recipe_oj <- recipe(Purchase ~ ., train)
 
@@ -234,7 +236,7 @@ best_bt_model <- oj_tune %>% select_best('accuracy') #Select best Hyper-paramete
 
 The hyperparameters for number of trees, tree depth, and learn rate for the boosted tree model were tuned using a grid with 5 levels and 4-fold cross validation. Hyperparameter performance was evaluated by overall model accuracy of prediction. The final hyperparameters for the model are number of trees (`r best_bt_model$trees`), tree depth (`r best_bt_model$tree_depth`), and learn rate (`r best_bt_model$learn_rate`).
 
-```{r boosted trees final model, warning=FALSE, echo=TRUE}
+```{r boosted trees final model}
 
 oj_final_workflow <- oj_workflow %>% finalize_workflow(best_bt_model) # Create Final Workflow based upon selected hyperparameters
 
@@ -245,7 +247,7 @@ final_fit %>% collect_metrics()
 
 The finalized model gave an AUC of 0.89, which is comparable, but slightly underperforms the logistic regression model previously discussed.
 
-```{r variable importance, warning=FALSE, echo=TRUE, fig.cap='Relative Variable Importance'}
+```{r variable importance}
 
 oj_final_workflow %>% fit(data = train) %>% extract_fit_parsnip() %>% vip(geom = 'col') #Plot most important variables based upon Variable Importance metric
 
@@ -260,7 +262,7 @@ One drawback to using a black-box machine learning algorithm like Gradient Boost
 
 The most important variable according to the Boosted Tree model is Customer Brand Loyalty to Citrus Hill(`r vi_values$Variable[1]`) with `r round(vi_values$Importance[1] *100, 2)`% importance, followed by Price Difference(`r vi_values$Variable[2]`) with `r round(vi_values$Importance[2] *100, 2)`% importance. All other independent variables displayed importance of \<3%.
 
-```{r XAI, warning=FALSE, echo=TRUE}
+```{r XAI}
 
 model_fitted <- oj_final_workflow %>% fit(data = train)
 
@@ -274,13 +276,15 @@ pdp <- model_profile(explainer_rf,
                              N=NULL)
 
 ```
-In addition to understanding which variables are important for management to focus on, it is also important to understand how those variables interact with the prediction for Minute Maid purchases by the customer.  It is useful to know that Brand Loyalty is important, but even more useful to know how to use that lever to identify potential crossover customers.  Partial Dependence Profiling (PDP) allows some insight what is happening inside a blackbox model such as GBTs.  The above plot shows the partial independent portion of a variable's influence on the dependent outcome variable. Comparable to information that can be obtained from linear or logistic regression.   
-```{r Brand Loyalty PDP, echo=TRUE, warning=FALSE, fig.cap='Partial Dependence Profile'}
+
+In addition to understanding which variables are important for management to focus on, it is also important to understand how those variables interact with the prediction for Minute Maid purchases by the customer.  It is useful to know that Brand Loyalty is important, but even more useful to know how to use that lever to identify potential crossover customers.  Partial Dependence Profiling (PDP) allows some insight what is happening inside a blackbox model such as GBTs.  The above plot shows the partial independent portion of a variable's influence on the dependent outcome variable. Comparable to information that can be obtained from linear or logistic regression.
+
+```{r Brand Loyalty PDP}
 plot(pdp, title='Partial Dependence Profiles', subtitle=' ')
 ```
 Both variables display a positive relationship with the purchase of Minute Maid.  Meaning, that the more Brand Loyalty a customer displays towards Citrus Hill and the larger the price difference between MM and CH (in Citrus Hill's favor) the more likely the customer was to purchase Minute Maid.  This would seem to be counter-intuitive and so it was verified by looking at the original data, where this observation was supported (see below).  This would seem to indicate that there is a unique positioning opportunity for Minute Maid in WGC stores.
 
-```{r LoyaltyCH vs PriceDiff plot, echo=TRUE, warning=FALSE, fig.cap='Distribution of Outcome Variable for LoyalCH'}
+```{r LoyaltyCH vs PriceDiff plot}
 ggplot2::ggplot(df, aes(LoyalCH, color=Purchase)) + geom_density() + scale_color_discrete(name='Purchased MM', labels=c("No","Yes")) + labs(title = 'Density plot of Observations for LoyalCH')
 ```
 
@@ -303,7 +307,7 @@ No real world model will be perfect at correctly classifying customers as Minute
 \newpage
 ## Appendix: Data Characteristics
 
-```{r Appendix 1 Data Characteristics, echo=TRUE, warning=FALSE}
+```{r Appendix 1 Data Characteristics}
 summary(df)
 summary(test)
 summary(train)
@@ -318,7 +322,7 @@ ggplot2::ggplot(df, aes(PctDiscMM, color=Purchase)) + geom_density() + scale_col
 
 #ggplot2::ggplot(df, aes(LoyalCH, color=Purchase)) + geom_density() + scale_color_discrete(name='Purchased MM', labels=c("No","Yes")) + labs(title = 'Density plot of Observations for LoyalCH')
 
-ggplot2::ggplot(df, aes(PriceDiff, color=Purchase)) + geom_density() + scale_color_discrete(name='Purchased MM', labels=c("No","Yes")) + labs(title = 'Density plot of Observations for PriceDiff')
+ggplot2::ggplot(df, aes(PriceDiff, color=Purchase)) + geom_density() + scale_color_discrete(name='Purchased MM', labels=c("No","Yes")) + labs(title = 'Density plot of Observations for PriceDiff') + geom_vline(xintercept = 0.18, linetype = 3) + geom_vline(xintercept = 0.39, linetype = 3)
 
 
 ```
