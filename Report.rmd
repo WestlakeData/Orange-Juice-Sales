@@ -4,8 +4,8 @@ subtitle: "Identification of Significant Predictor Variables and Predictive Mode
 author: "Chris Gearheart and Chris Porter"
 date: "`r Sys.Date()`"
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
 ---
 \newpage
 
@@ -200,7 +200,7 @@ acc_df %>%
 
 # View highest threshold and accuracy rate in context.
 
-plot(acc_matrix,colorize=FALSE, col="black") 
+plot(acc_matrix, col="black") 
 
 
 ```
@@ -297,9 +297,9 @@ When examined holistically, it becomes apparent that two major factors are suppo
 Both models showed remarkable accuracy at predicting Minute Maid customer purchases as measured by AUC (LR = 0.90, GBT = 0.89).  We can be very confident that these models are accurately capturing customer behavior.  Understanding the factors which are making the models so accurate allows us to be equally confident in the recommendations arising from these models.  Also of note is the fact that both methodologies independently found similar factors to be at work.
 
 ### Sales
-A key deliverable of this project was to explore the viability of a predictive model that could be used by the Sales Department to provide the probability a customer would purchase Minute Maid.  We tested a predictive statistical model as well as a machine learning model.  Both models performed well.  When compared by AUC (a metric which represents a model’s ability to correctly identify Minute Maid purchases balanced against predictions of purchase which do not occur) the logistic regression model slightly outperformed the machine learning model (see above).  In terms of overall model accuracy the logistic regression model again outperformed the machine learning model (LR = 83.3%, GBT = 79.9%).  The optimal decision threshold to achieve the most accurate results was a probability of >= 0.465 An additional benefit of the logistic regression model, it is also significantly more computationally efficient than the machine learning model.  
+A key deliverable of this project was to explore the viability of a predictive model that could be used by the Sales Department to provide the probability a customer would purchase Minute Maid.  We tested a predictive statistical model as well as a machine learning model.  Both models performed well.  When compared by AUC (a metric which represents a model’s ability to correctly identify Minute Maid purchases balanced against predictions of purchase which do not occur) the logistic regression model slightly outperformed the machine learning model (see above).  In terms of overall model accuracy the logistic regression model again outperformed the machine learning model (LR = 84.3%, GBT = 79.9%).  The optimal decision threshold to achieve the most accurate results was a probability of $\geq$ 0.465. An additional benefit of the logistic regression model, it is also significantly more computationally efficient than the machine learning model.  
 
-No real world model will be perfect at correctly classifying customers as Minute Maid purchase vs. no purchase, however we propose that correctly classifying customers 83.3% of the time provides sufficient added value to the company that implementation of the model in the Sales Department will positively impact business operations in regards to orange juice sales.
+No real world model will be perfect at correctly classifying customers as Minute Maid purchase vs. no purchase, however we propose that correctly classifying customers 84.3% of the time provides sufficient added value to the company that implementation of the model in the Sales Department will positively impact business operations in regards to Minute Maid orange juice sales.
 
 
 \newpage
