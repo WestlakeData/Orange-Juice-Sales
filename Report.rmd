@@ -299,10 +299,10 @@ When examined holistically, it becomes apparent that two major factors are suppo
 Both models showed remarkable accuracy at predicting Minute Maid customer purchases as measured by AUC (LR = 0.90, GBT = 0.89).  We can be very confident that these models are accurately capturing customer behavior.  Understanding the factors which are making the models so accurate allows us to be equally confident in the recommendations arising from these models.  Also of note is the fact that both methodologies independently found similar factors to be at work.
 
 ### Sales
-1. Can you build a predictive model that can inform him the probability of
-customers buying MM?
-2. How good is the model in its predictions?
-3. How confident are you in your recommendations?
+A key deliverable of this project was to explore the viability of a predictive model that could be used by the Sales Department to provide the probability a customer would purchase Minute Maid.  We tested a predictive statistical model as well as a machine learning model.  Both models performed well.  When compared by AUC (a metric which represents a model’s ability to correctly identify Minute Maid purchases balanced against predictions of purchase which do not occur) the logistic regression model slightly outperformed the machine learning model (see above).  In terms of overall model accuracy the logistic regression model again outperformed the machine learning model (LR = 83.3%, GBT = 79.9%).  The optimal decision threshold to achieve the most accurate results was a probability of >= 0.465 An additional benefit of the logistic regression model, it is also significantly more computationally efficient than the machine learning model.  
+
+No real world model will be perfect at correctly classifying customers as Minute Maid purchase vs. no purchase, however we propose that correctly classifying customers 83.3% of the time provides sufficient added value to the company that implementation of the model in the Sales Department will positively impact business operations in regards to orange juice sales.
+
 
 \newpage
 ## Appendix 1: Data Characteristics
@@ -320,7 +320,7 @@ corrplot(corr, p.mat = testDf$p, method = 'number', type = 'lower', insig='blank
 
 ggplot2::ggplot(df, aes(PctDiscMM, color=Purchase)) + geom_density() + scale_color_discrete(name='Purchased MM', labels=c("No","Yes")) + labs(title = 'Density plot of Observations for PctDiscMM')
 
-ggplot2::ggplot(df, aes(LoyalCH, color=Purchase)) + geom_density() + scale_color_discrete(name='Purchased MM', labels=c("No","Yes")) + labs(title = 'Density plot of Observations for LoyalCH')
+#ggplot2::ggplot(df, aes(LoyalCH, color=Purchase)) + geom_density() + scale_color_discrete(name='Purchased MM', labels=c("No","Yes")) + labs(title = 'Density plot of Observations for LoyalCH')
 
 ggplot2::ggplot(df, aes(PriceDiff, color=Purchase)) + geom_density() + scale_color_discrete(name='Purchased MM', labels=c("No","Yes")) + labs(title = 'Density plot of Observations for PriceDiff')
 
