@@ -4,8 +4,8 @@ subtitle: "Identification of Significant Predictor Variables and Predictive Mode
 author: "Chris Gearheart and Chris Porter"
 date: "`r Sys.Date()`"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 \newpage
 
@@ -21,7 +21,7 @@ library(ROCR)
 library(dplyr)
 library(plotROC)
 library(glmnet)
-library(AUC)
+#library(AUC)
 
 ```
 ```{r setup, echo=TRUE}
@@ -188,7 +188,7 @@ test$lass_preds <- predict(cv.binomial, newx = test_predictors,
 
 # Create data frame of accuracy rates at various thresholds
 
-acc_matrix <- accuracy(test$lass_preds, test$Purchase)
+acc_matrix <- AUC::accuracy(test$lass_preds, test$Purchase)
 
 acc_df <- data.frame(thresh = acc_matrix$cutoffs, acc = acc_matrix$measure)
 
@@ -232,8 +232,6 @@ oj_tune <- oj_workflow %>% tune_grid(resamples = purchase_folds,
                                      metrics = metric_set(accuracy))
 
 best_bt_model <- oj_tune %>% select_best('accuracy') #Select best Hyper-parameters from grid
-
-#best_bt_model
 
 ```
 
