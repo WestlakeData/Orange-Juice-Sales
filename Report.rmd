@@ -36,17 +36,16 @@ test <- testing(purchase_testtrain)
 
 Wasatch Grocery Chain (WGC) is a regional grocery chain operating in the Intermoutain West of the US. WGC sells two brands of orange juice in its stores, Citrus Hill (CH) and Minute Maid (MM) of which MM is the more profitable to the company. This report will identify **what customer factors** within available data **contribute to purchase of Minute Maid over Citrus Hill**, as well as **to** **what degree these factors influence customer choice**. In addition, a predictive model is created that will allow the Sales Department to identify other customers within our customer base that are more likely to purchase Minute Maid brand orange juice, thus driving profitability across the company.
 
-#### Available Data
+### Available Data
 
 The data set used in this report contains 13 possible predictor variables as well as 1 outcome variable, Purchase, which records whether or not a customer purchased MM. There are a total of 1070 observations in the data set. The data set was further partitioned into a **training** data set, containing `r nrow(train)` observations, and a validation **testing** data set containing `r nrow(test)` observations.
 
 The code below imports the data set, coverts the binary `Purchase` outcome into a factor, and pulls out 25% of the observations as a hold-out set or test set against which our final model can be tested. Doing so helps us avoid the mistake of training a model that performs well against the sample data, but fails to generalize to a new data set from the same population.
 
-#### 
 
 ## Methods
 
-#### **Logistic Regression:**
+### **Logistic Regression:**
 
 WGC's management team wants to know **which variables contribute to an customer outcome of "Yes; Purchased Minute Maid**." Their goal matches the strengths of a logistic regression, which can explain the strength and direction of independent variables' effects on a binary classification outcome (often yes/no or is/is not). This algorithm will tell management which variables push customers towards or away from a Minute Maid purchase, plus which variables have no bearing on the outcome. Significant variables proven to have big enough effects can become levers for action or intervention for management.
 
@@ -85,7 +84,7 @@ corr %>% cor() %>% corrplot()
 
 Accordingly, our team decided to use the "Lasso" method of logistic regression that regresses all variables against all other variables, modifying each variable's predictive weight based on its correlation to to other variables by strengthening, weakening, or even nullifying its effect.
 
-##### Variable selection and model design 
+#### Variable selection and model design 
 
 The `cv.glmnet()` function below applied that method to our training data set, printing out coefficients for each variable that have been penalized or nullified if their relationship to other variables is multicollinear.
 
@@ -117,7 +116,7 @@ print(y4)
 
 Since the Lasso function of the regression has shrunk the effects of `PriceMM`, `DiscCH`, `SalesPriceCH` and `PctDiscCH` to zero or "`.`" in light of multicollinearity, management can be confident that those variables are not meaningful levers for action.
 
-##### Interpreting the coefficients
+#### Interpreting the coefficients
 
 Since `cv.glmnet()` standardized/scaled the data so that the inconsistently sized ranges of values used by different variables won't accidentally weight different variables as more important, the coefficients above are not interpretable yet.
 
@@ -147,7 +146,7 @@ varInt
 Our model reports that the three variables with the strongest effects are `LoyalCH`, `PriceDiff` and `PctDiscMM`. The odds of a customer purchasing MinuteMaid increase by 722 when the `LoyalCH`, the most influential variable in the model, increases by the variable's standard deviation of 30%. `PriceDiff` increases chance of purchase by 30 with every $0.27 increase in the difference between MinuteMaid and Citrus Hill. The odds of a MinuteMaid purchase increase by 18 for every 10% increase in `PctDiscMM`.
 
 
-##### Performance against test data 
+#### Performance against test data 
 
 The predictions of this logistic regression performed well against the ground truth outcomes in the test set held in reserve at the beginning of our analysis.
 
@@ -204,7 +203,7 @@ plot(acc_matrix, col="black")
 ```
 
 
-#### **Gradient Boosted Decision Trees:**
+### **Gradient Boosted Decision Trees:**
 
 Management also wants to be able to predict the likelihood that any given future customer will buy Minute Maid. Knowing how many customers are likely to purchase Minute Maid can help in (1) forecasting cash flow and supply chain demand and (2) targeting marketing to customers who are in the ideal position to buy and ignoring those who are not.
 
@@ -284,6 +283,7 @@ Both variables display a positive relationship with the purchase of Minute Maid.
 ```{r LoyaltyCH vs PriceDiff plot, echo=TRUE, warning=FALSE}
 ggplot2::ggplot(df, aes(LoyalCH, color=Purchase)) + geom_density() + scale_color_discrete(name='Purchased MM', labels=c("No","Yes")) + labs(title = 'Density plot of Observations for LoyalCH')
 ```
+
 ## Conclusions and Recommendations
 At the beginning of this project we met with stakeholders in the Branding and Sales departments and identified key deliverables to ensure that this project provided actionable information and value to the company.  Based upon our work we suggest the following interpretations and courses of action moving forward.
 
@@ -310,7 +310,7 @@ summary(train)
 
 corr <- cor(df[-1]) #correlogram of numeric variables, excluding outcome variable
 testDf <- cor.mtest(df[-1], conf.level = 0.95) #compute significance of correlation
-# Plot correlogram
+# Plot correlogram with coefficients
 corrplot(corr, p.mat = testDf$p, method = 'number', type = 'lower', insig='blank', 
          addCoef.col ='black', number.cex = 0.6, order = 'AOE', diag=FALSE, tl.srt = 45, tl.col = 'black')
 
