@@ -21,6 +21,7 @@ library(ROCR)
 library(dplyr)
 library(plotROC)
 library(glmnet)
+library(AUC)
 
 ```
 ```{r setup, echo=TRUE}
@@ -88,7 +89,7 @@ Accordingly, our team decided to use the "Lasso" method of logistic regression t
 
 ##### Variable selection and model design 
 
-The `cv.glmnet` function below does that work by finding THEBESTWAYTOSUCCINCTLYDESCRIBEIT, ultimately printing out coefficients for each variable that have been penalized or nullified if their relationship to other variables is multicollinear.
+The `cv.glmnet()` function below applied that method to our training data set, printing out coefficients for each variable that have been penalized or nullified if their relationship to other variables is multicollinear.
 
 Additionally, in a microcosm of the training/test split we set up at the beginning of the project, this method cross-validates the results of the trained regression by testing it against seven different one-seventh chunks of the entire set.
 
@@ -96,12 +97,11 @@ The code below performs a logistic regression, but it uses Lasso (`alpha = 1`), 
 
 ```{r Lasso logistic regression, warning=FALSE, echo=TRUE}
 
-predictors <- train[,c(2:13)]
-purchase_only <- train$Purchase
-
-str(predictors)
-
-predMod <- glm(train$Purchase ~ ., data = train, family = binomial(link='logit'))
+predictors <- train[,c(2:13)] %>%
+  mutate(
+    SpecialCH = as.factor(SpecialCH), 
+    SpecialMM = as.factor(SpecialMM)
+    )
 
 predictors <- data.matrix(predictors)
 
@@ -118,6 +118,36 @@ print(y4)
 ```
 
 Since the Lasso function of the regression has shrunk the effects of `PriceMM`, `DiscCH`, `SalesPriceCH` and `PctDiscCH` to zero or "`.`" in light of multicollinearity, management can be confident that those variables are not meaningful levers for action.
+
+##### Interpreting the coefficients
+
+Since `cv.glmnet()` standardized/scaled the data so that the inconsistently sized ranges of values used by different variables won't accidentally weight different variables as more important, the coefficients above are not interpretable yet.
+
+```{r}
+
+# add 11/28
+(varInt <- y4 %>% as.matrix %>% as.data.frame)
+
+varInt$varDdevs <- c("NA", sd(train$PriceCH), sd(train$PriceMM), sd(train$DiscCH), sd(train$DiscMM), sd(train$SpecialCH), sd(train$SpecialMM), sd(train$LoyalCH), sd(train$SalePriceMM), sd(train$SalePriceCH), sd(train$PriceDiff), sd(train$PctDiscMM), sd(train$PctDiscCH))
+
+varInt <- varInt %>% 
+  mutate(
+    s1 = ifelse(s1 == 0, NA, s1),
+    logodds = ifelse(s1 == 0.000, NA, exp(varInt[,1])),
+    varDdevs = ifelse(s1 == 0, NA, as.numeric(varDdevs)),
+    varDdevs = round(varDdevs, 3),
+    logodds = round(logodds, 3),
+    s1 = round(s1,3)
+  )
+
+colnames(varInt) <- c(s1 = 'Coefficient', 'For every variable unit increase of this size...', '... the odds of purchase increase by this much')
+
+varInt
+
+```
+
+Our model reports that the three variables with the strongest effects are `LoyalCH`, `PriceDiff` and `PctDiscMM`. The odds of a customer purchasing MinuteMaid increase by 722 when the `LoyalCH`, the most influential variable in the model, increases by the variable's standard deviation of 30%. `PriceDiff` increases chance of purchase by 30 with every $0.27 increase in the difference between MinuteMaid and Citrus Hill. The odds of a MinuteMaid purchase increase by 18 for every 10% increase in `PctDiscMM`.
+
 
 ##### Performance against test data 
 
@@ -142,9 +172,39 @@ lines(c(0,1),c(0,1),col = "gray", lty = 4 )
 text(1,0.15,labels=paste("AUC = ",round(auc_ROCR@y.values[[1]],
                                         digits=2),sep=""),adj=1)
 
+```
+
+The AUC tells us how optimally our model can handle the balance between true and false positives at different classification thresholds, but we will ultimately need to choose the optimal threshold for our model.
+
+The analysis below lets us know that the optimal classification threshold for our model is 46.5% — any customer with that high or higher a likelihood of purchasing MinuteMaid should be classified as "Yes; Will Purchase MinuteMaid." That percentage optimally balances the likelihood of true positives and the risk of false positives.
+
+```{r Accuracy and optimal classification threshold}
+
+# Calculate classification threshold of highest accuracy
+
+# Add predictions to test set
+test$lass_preds <- predict(cv.binomial, newx = test_predictors, 
+               type = "response", s ="lambda.min")
+
+# Create data frame of accuracy rates at various thresholds
+
+acc_matrix <- accuracy(test$lass_preds, test$Purchase)
+
+acc_df <- data.frame(thresh = acc_matrix$cutoffs, acc = acc_matrix$measure)
+
+# Isolate highest threshold and accuracy rate
+
+acc_df %>% 
+  filter(acc == max(acc)) %>% 
+  filter(thresh == max(thresh))
+
+# View highest threshold and accuracy rate in context.
+
+plot(acc_matrix,colorize=FALSE, col="black") 
 
 
 ```
+
 
 #### **Gradient Boosted Decision Trees:**
 
