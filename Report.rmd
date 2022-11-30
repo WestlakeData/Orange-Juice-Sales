@@ -42,22 +42,22 @@ Wasatch Grocery Chain (WGC) is a regional grocery chain operating in the Intermo
 
 The data set used in this report contains 13 possible predictor variables as well as 1 outcome variable, Purchase, which records whether or not a customer purchased MM. There are a total of 1070 observations in the data set. The data set was further partitioned into a **training** data set, containing `r nrow(train)` observations, and a validation **testing** data set containing `r nrow(test)` observations.
 
-The code below imports the data set, coverts the binary `Purchase` outcome into a factor, and pulls out 25% of the observations as a hold-out set or test set against which our final model can be tested. Doing so helps us avoid the mistake of training a model that performs well against the sample data, but fails to generalize to a new data set from the same population.
+The code below imports the data set, converts the binary `Purchase` outcome into a factor, and pulls out 25% of the observations as a hold-out set or test set against which our final model can be tested. Doing so helps us avoid the mistake of training a model that performs well against the sample data, but fails to generalize to a new data set from the same population.
 
 
 ## Methods
 
 ### **Logistic Regression:**
 
-WGC's management team wants to know **which variables contribute to an customer outcome of "Yes; Purchased Minute Maid**." Their goal matches the strengths of a logistic regression, which can explain the strength and direction of independent variables' effects on a binary classification outcome (often yes/no or is/is not). This algorithm will tell management which variables push customers towards or away from a Minute Maid purchase, plus which variables have no bearing on the outcome. Significant variables proven to have big enough effects can become levers for action or intervention for management.
+WGC's management team wants to know **which variables contribute to a customer outcome of "Yes; Purchased Minute Maid**." Their goal matches the strengths of a logistic regression, which can explain the strength and direction of independent variables' effects on a binary classification outcome (often yes/no or is/is not). This algorithm will tell management which variables push customers towards or away from a Minute Maid purchase, plus which variables have no bearing on the outcome. Significant variables proven to have big enough effects can become levers for action or intervention for management.
 
 ##### Pre-processing 
 
 Logistic regressions work when:
 
-1.  Qualitative variable have been turned into quantitative dummy variables.
+1.  Qualitative variables have been turned into quantitative dummy variables.
 
-2.  No columns are uniformly filled with one unique value
+2.  No columns are uniformly filled with one unique value.
 
 3.  There is no missing data.
 
@@ -76,7 +76,7 @@ summary(train)
 sum(is.na(train))
 ```
 
-A correlogram confirms that there is high correlation between the thirteen variables. Some of them appear to be multicollinear, or not fully independent of one another (for correlation coefficients see Appendix).
+A correlogram confirms that there is high correlation between some of the thirteen variables. Some of them appear to be multicollinear, or not fully independent of one another (for correlation coefficients see Appendix).
 
 ```{r logreg - preproc2}
 
@@ -84,11 +84,11 @@ corr <- cor(df[-1])
 corr %>% cor() %>% corrplot()
 ```
 
-Accordingly, our team decided to use the "Lasso" method of logistic regression that regresses all variables against all other variables, modifying each variable's predictive weight based on its correlation to to other variables by strengthening, weakening, or even nullifying its effect.
+Accordingly, our team decided to use the "Lasso" method of logistic regression that regresses all variables against all other variables, modifying each variable's predictive weight based on its correlation to other variables by strengthening, weakening, or even nullifying its effect.
 
 #### Variable selection and model design 
 
-The `cv.glmnet()` function below applied that method to our training data set, printing out coefficients for each variable that have been penalized or nullified if their relationship to other variables is multicollinear.
+The `cv.glmnet()` function below applied penalized regression to our training data set, printing out coefficients for each variable that have been penalized or nullified if their relationship to other variables is multicollinear.
 
 Additionally, in a microcosm of the training/test split we set up at the beginning of the project, this method cross-validates the results of the trained regression by testing it against seven different one-seventh chunks of the entire set.
 
@@ -152,7 +152,7 @@ Our model reports that the three variables with the strongest effects are `Loyal
 
 The predictions of this logistic regression performed well against the ground truth outcomes in the test set held in reserve at the beginning of our analysis.
 
-Our regression turned variables into percentage likelihoods, but it is up to the analyst to decide what percentage triggers a label of "Yes; Purchased MinuteMaid", a decision called the "classification threshold." The area-under-the-curve (AUC) metric is a sign of an model's general performance in classification --- a higher AUC means a model is good at balancing the risk of true positives to true negatives.
+Our regression turned variables into percentage likelihoods, but it is up to the analyst to decide what percentage triggers a label of "Yes; Purchased MinuteMaid", a decision called the "classification threshold." The area-under-the-curve (AUC) metric is a sign of a model's general performance in classification --- a higher AUC means a model is good at balancing the risk of true positives to true negatives.
 
 The area-under-curve for this model is 0.90.
 
@@ -277,7 +277,7 @@ pdp <- model_profile(explainer_rf,
 
 ```
 
-In addition to understanding which variables are important for management to focus on, it is also important to understand how those variables interact with the prediction for Minute Maid purchases by the customer.  It is useful to know that Brand Loyalty is important, but even more useful to know how to use that lever to identify potential crossover customers.  Partial Dependence Profiling (PDP) allows some insight what is happening inside a blackbox model such as GBTs.  The above plot shows the partial independent portion of a variable's influence on the dependent outcome variable. Comparable to information that can be obtained from linear or logistic regression.
+In addition to understanding which variables are important for management to focus on, it is also important to understand how those variables interact with the prediction for Minute Maid purchases by the customer.  It is useful to know that Brand Loyalty is important, but even more useful to know how to use that lever to identify potential crossover customers.  Partial Dependence Profiling (PDP) allows some insight into what is happening inside a blackbox model such as GBTs.  The above plot shows the partial independent portion of a variable's influence on the dependent outcome variable. Comparable to information that can be obtained from linear or logistic regression.
 
 ```{r Brand Loyalty PDP}
 plot(pdp, title='Partial Dependence Profiles', subtitle=' ')
@@ -299,7 +299,7 @@ When examined holistically, it becomes apparent that two major factors are suppo
 Both models showed remarkable accuracy at predicting Minute Maid customer purchases as measured by AUC (LR = 0.90, GBT = 0.89).  We can be very confident that these models are accurately capturing customer behavior.  Understanding the factors which are making the models so accurate allows us to be equally confident in the recommendations arising from these models.  Also of note is the fact that both methodologies independently found similar factors to be at work.
 
 ### Sales
-A key deliverable of this project was to explore the viability of a predictive model that could be used by the Sales Department to provide the probability a customer would purchase Minute Maid.  We tested a predictive statistical model as well as a machine learning model.  Both models performed well.  When compared by AUC (a metric which represents a model’s ability to correctly identify Minute Maid purchases balanced against predictions of purchase which do not occur) the logistic regression model slightly outperformed the machine learning model (see above).  In terms of overall model accuracy the logistic regression model again outperformed the machine learning model (LR = 84.3%, GBT = 79.9%).  The optimal decision threshold to achieve the most accurate results was a probability of $\geq$ 0.468. An additional benefit of the logistic regression model, it is also significantly more computationally efficient than the machine learning model.  
+A key deliverable of this project was to explore the viability of a predictive model that could be used by the Sales Department to provide the probability a customer would purchase Minute Maid.  We tested a predictive statistical model as well as a machine learning model.  Both models performed well.  When compared by AUC (a metric which represents a model’s ability to correctly identify Minute Maid purchases balanced against predictions of purchase which do not occur) the logistic regression model slightly outperformed the machine learning model (see above).  In terms of overall model accuracy the logistic regression model again outperformed the machine learning model (LR = 84.3%, GBT = 79.9%).  The optimal decision threshold to achieve the most accurate results was a probability of $\geq$ 0.468. An additional benefit of the logistic regression model is that it requires less computational resources than the machine learning model.  
 
 No real world model will be perfect at correctly classifying customers as Minute Maid purchase vs. no purchase, however we propose that correctly classifying customers 84.3% of the time provides sufficient added value to the company that implementation of the model in the Sales Department will positively impact business operations in regards to Minute Maid orange juice sales.
 
